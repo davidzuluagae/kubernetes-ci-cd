@@ -77,11 +77,11 @@ spec:
            - matchExpressions:
              - key: node-role.kubernetes.io/master
                operator: Exists
-      securityContext:
-        fsGroup: 117
       containers:
-      - image: 10.100.108.195:5000/jenkins-docker:latest
+      - image: 127.0.0.1:30400/jenkins:latest
         name: jenkins
+        securityContext:
+          privileged: true
         volumeMounts:
         - name: docker
           mountPath: /var/run/docker.sock
