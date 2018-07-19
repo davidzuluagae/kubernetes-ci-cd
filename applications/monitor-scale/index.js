@@ -5,7 +5,7 @@ var http = require('http').Server(app);
 var request = require('request');
 var async = require('async');
 var io = require('socket.io')(http);
-var path    = require("path");
+var path = require("path");
 var Etcd = require('node-etcd')
 var cors = require('cors');
 
@@ -50,6 +50,8 @@ app.post('/scale', function (req, res) {
       return console.error('Failed to scale:', err);
     }
     console.log('Scale success!');
+    console.log('Response: ' + JSON.stringify(httpResponse));
+    console.log('BODY: ' + JSON.stringify(body));
     res.send('success');
   });
 });

@@ -23,7 +23,7 @@ spec:
               command: ["/up.sh"]
           preStop:
             exec:
-              command: ["/down.sh"]        
+              command: ["/down.sh"]
         ports:
         - containerPort: 3000
           name: puzzle
@@ -85,7 +85,9 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
- name: puzzle
+  annotations:
+    ingress.kubernetes.io/enable-cors: true
+  name: puzzle
 spec:
   backend:
     serviceName: puzzle
