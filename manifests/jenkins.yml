@@ -70,42 +70,34 @@ spec:
         app: jenkins
         tier: jenkins
     spec:
-#      affinity:
-#        nodeAffinity:
-#         requiredDuringSchedulingIgnoredDuringExecution:
-#           nodeSelectorTerms:
-#           - matchExpressions:
-#             - key: node-role.kubernetes.io/master
-#               operator: Exists
+      serviceAccount: jenkins
+      initContainers:
+      - image: 127.0.0.1:30400/jenkins-init:latest
+        name: kubectl-config
+        command:
+        - sh
+        - kubectl-config-context.sh
+        volumeMounts:
+        - name: kube-config
+          mountPath: "/.kube"
       containers:
       - image: 127.0.0.1:30400/jenkins:latest
         name: jenkins
-        env:
-        - name: TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: default-token-cxnj9
-
-              key: token
         securityContext:
           privileged: true
         volumeMounts:
+        - name: kube-config
+          mountPath: "/.kube"
         - name: docker
           mountPath: /var/run/docker.sock
         - name: jenkins-persistent-storage
           mountPath: /root/.jenkins
-        - name: cacert
-          mountPath: /var/jenkins_home/.ssh
         ports:
         - containerPort: 8080
           name: jenkins
       volumes:
-      - name: cacert
-        secret:
-          secretName: default-token-cxnj9
-          items:
-          - key: ca.crt
-            path: ca.crt
+      - name: kube-config
+        emptyDir: {}
       - name: docker
         hostPath:
           path: /var/run/docker.sock
