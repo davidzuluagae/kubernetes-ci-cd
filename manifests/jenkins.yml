@@ -29,12 +29,16 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: docker-install
+  creationTimestamp: null
+  name: kubectl-jenkins-context
 data:
-  docker-install.sh: |
+  kubectl-config-context.sh: |-
     #!/bin/bash
-    apt-get update
-    apt-get install docker.io -y
+
+    kubectl config set-credentials jenkins --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+    kubectl config set-cluster minikube --server="https://192.168.99.100:8443" --certificate-authority="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+    kubectl config set-context jenkins-minikube --cluster=minikube --user=jenkins --namespace=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+    kubectl config use-context jenkins-minikube && kubectl config view
 
 ---
 
@@ -72,7 +76,7 @@ spec:
     spec:
       serviceAccount: jenkins
       initContainers:
-      - image: 127.0.0.1:30400/jenkins-init:latest
+      - image: lachlanevenson/k8s-kubectl:latest
         name: kubectl-config
         command:
         - sh
@@ -80,6 +84,8 @@ spec:
         volumeMounts:
         - name: kube-config
           mountPath: "/.kube"
+        - name: kubectl-jenkins-context
+          mountPath: "."
       containers:
       - image: 127.0.0.1:30400/jenkins:latest
         name: jenkins
@@ -96,6 +102,12 @@ spec:
         - containerPort: 8080
           name: jenkins
       volumes:
+      - name: kubectl-jenkins-context
+        configMap:
+          name: kubectl-jenkins-context
+          items:
+          - key: kubectl-config-context.sh
+            path: kubectl-config-context.sh
       - name: kube-config
         emptyDir: {}
       - name: docker
